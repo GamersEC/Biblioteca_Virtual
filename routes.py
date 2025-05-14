@@ -21,6 +21,7 @@ def configurar_rutas(app):
 
     @app.route('/registrar_libro', methods=['POST'])
     def registrar_libro():
+        id = request.form['id']
         titulo = request.form['titulo']
         autor = request.form['autor']
         anio = request.form['anio']
@@ -40,3 +41,31 @@ def configurar_rutas(app):
     @app.route('/lista_libros')
     def lista_libros():
         return render_template('lista_libros.html', libros=libros)
+
+    @app.route('/eliminar_libro/<int:id>')
+    def eliminar_libro(id):
+        for libro in libros:
+            if libro.id == id:
+                libros.remove(libro)
+                break
+        return redirect('/lista_libros')
+        print ("Libro eliminado")
+
+    @app.route('/editar_libro/<int:id>', methods=['GET', 'POST'])
+    def editar_libro(id):
+        libro = next((libro for libro in libros if libro.id == id), None)
+        if request.method == 'POST':
+            libro.titulo = request.form['titulo']
+            libro.autor = request.form['autor']
+            libro.anio = request.form['anio']
+            libro.editorial = request.form['editorial']
+            archivo = request.files['archivo']
+
+            if archivo.filename != '':
+                filename = secure_filename(archivo.filename)
+                archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                libro.archivo = filename
+
+            return redirect('/lista_libros')
+        return render_template('editar_libro.html', libro=libro)
+
