@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Libros{% endblock %}
+
+{% block content %}
+<h2>Lista de Libros Registrados</h2>
+{% if libros %}
+<ul>
+    {% for libro in libros %}
+    <li>
+        <strong>{{ libro.titulo }}</strong> — {{ libro.autor }} ({{ libro.anio }}) [ISBN: {{ libro.isbn }}]
+        {% if libro.archivo %}
+        — <a href="{{ url_for('static', filename='../uploads/' ~ libro.archivo) }}" target="_blank">Ver PDF</a>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No hay libros registrados.</p>
+{% endif %}
+{% endblock %}
