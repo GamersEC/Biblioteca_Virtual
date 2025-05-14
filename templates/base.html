@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Biblioteca Virtual{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+    <h1>Biblioteca Virtual</h1>
+    <nav>
+        <a href="/">Inicio</a> |
+        <a href="/registro_libro">Registrar Libro</a> |
+        <a href="/lista_libros">Ver Libros</a>
+    </nav>
+    <hr>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <hr>
+    <p>&copy; 2025 Biblioteca Virtual Universitaria</p>
+</footer>
+</body>
+</html>
