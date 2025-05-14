@@ -1,13 +1,18 @@
 import os
-from flask import render_template, request, redirect
-from modelos import libros, Libro
+from flask import render_template, request, redirect, flash
+from modelos import db, Libro
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def configurar_rutas(app):
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+    # Crear directorio de uploads si no existe
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
 
@@ -21,51 +26,58 @@ def configurar_rutas(app):
 
     @app.route('/registrar_libro', methods=['POST'])
     def registrar_libro():
-        id = request.form['id']
+        # Obtener datos del formulario
         titulo = request.form['titulo']
         autor = request.form['autor']
         anio = request.form['anio']
         editorial = request.form['editorial']
         archivo = request.files['archivo']
 
-        if archivo.filename != '':
+        # Validar archivo
+        if archivo.filename == '':
+            flash('No se seleccionó ningún archivo', 'error')
+            return redirect('/registro_libro')
+
+        if not allowed_file(archivo.filename):
+            flash('Solo se permiten archivos PDF', 'error')
+            return redirect('/registro_libro')
+
+        try:
+            # Guardar archivo
             filename = secure_filename(archivo.filename)
             archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        else:
-            filename = None
 
-        nuevo_libro = Libro(titulo, autor, anio, editorial, filename)
-        libros.append(nuevo_libro)
-        return redirect('/lista_libros')
+            # Crear y guardar libro en la base de datos
+            nuevo_libro = Libro(
+                titulo=titulo,
+                autor=autor,
+                anio=anio,
+                editorial=editorial,
+                archivo=filename
+            )
+
+            db.session.add(nuevo_libro)
+            db.session.commit()
+
+            flash('Libro registrado exitosamente!', 'success')
+            return redirect('/lista_libros')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al registrar el libro: {str(e)}', 'error')
+            return redirect('/registro_libro')
 
     @app.route('/lista_libros')
     def lista_libros():
+        libros = Libro.query.order_by(Libro.titulo).all()
         return render_template('lista_libros.html', libros=libros)
 
-    @app.route('/eliminar_libro/<int:id>')
-    def eliminar_libro(id):
-        for libro in libros:
-            if libro.id == id:
-                libros.remove(libro)
-                break
-        return redirect('/lista_libros')
-        print ("Libro eliminado")
+    # Manejo de errores básico
+    @app.errorhandler(404)
+    def pagina_no_encontrada(error):
+        return render_template('404.html'), 404
 
-    @app.route('/editar_libro/<int:id>', methods=['GET', 'POST'])
-    def editar_libro(id):
-        libro = next((libro for libro in libros if libro.id == id), None)
-        if request.method == 'POST':
-            libro.titulo = request.form['titulo']
-            libro.autor = request.form['autor']
-            libro.anio = request.form['anio']
-            libro.editorial = request.form['editorial']
-            archivo = request.files['archivo']
-
-            if archivo.filename != '':
-                filename = secure_filename(archivo.filename)
-                archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                libro.archivo = filename
-
-            return redirect('/lista_libros')
-        return render_template('editar_libro.html', libro=libro)
-
+    @app.errorhandler(500)
+    def error_servidor(error):
+        db.session.rollback()
+        return render_template('500.html'), 500

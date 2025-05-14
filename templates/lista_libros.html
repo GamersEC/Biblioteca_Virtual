@@ -1,16 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}Lista de Libros{% endblock %}
-
 {% block content %}
 <h2>Lista de Libros Registrados</h2>
+
+<!-- Mensajes Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
 {% if libros %}
 <ul>
     {% for libro in libros %}
     <li>
-        <strong>{{ libro.titulo }}</strong> — {{ libro.autor }} ({{ libro.anio }}) [ISBN: {{ libro.isbn }}]
+        <strong>{{ libro.titulo }}</strong> — {{ libro.autor }} ({{ libro.anio }}) [Editorial: {{ libro.editorial }}]
         {% if libro.archivo %}
-        — <a href="{{ url_for('static', filename='../uploads/' ~ libro.archivo) }}" target="_blank">Ver PDF</a>
+        — <a href="{{ url_for('static', filename='uploads/' + libro.archivo) }}" target="_blank">Ver PDF</a>
         {% endif %}
     </li>
     {% endfor %}
