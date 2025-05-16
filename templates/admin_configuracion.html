@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración Global (Admin){% endblock %}
+
+{% block content %}
+<h2>Configuración Global del Sistema (Admin)</h2>
+<form method="POST">
+  <div class="form-group">
+    <label for="max_prestamos_default">Máximo de Préstamos por Defecto para Nuevos Libros:</label>
+    <input type="number" name="max_prestamos_default" id="max_prestamos_default" class="form-control"
+           value="{{ configs.max_prestamos_default }}" min="1" required>
+    <small>Este valor se usará al registrar nuevos libros si no se especifica otro.</small>
+  </div>
+
+  <div class="form-group">
+    <label for="duracion_prestamo_default">Duración de Préstamo por Defecto (días):</label>
+    <input type="number" name="duracion_prestamo_default" id="duracion_prestamo_default" class="form-control"
+           value="{{ configs.duracion_prestamo_default }}" min="1" required>
+    <small>Este valor se usará como predeterminado al registrar nuevos préstamos.</small>
+  </div>
+
+  <div class="form-group">
+    <label for="max_duracion_prestamo">Duración Máxima de Préstamo Permitida (días):</label>
+    <input type="number" name="max_duracion_prestamo" id="max_duracion_prestamo" class="form-control"
+           value="{{ configs.max_duracion_prestamo }}" min="1" required>
+    <small>El sistema no permitirá préstamos por más de esta cantidad de días.</small>
+  </div>
+
+  <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Configuración</button>
+</form>
+{% endblock %}

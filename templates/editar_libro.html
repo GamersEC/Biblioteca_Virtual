@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Libro - {{ libro.titulo }}{% endblock %}
+
+{% block content %}
+<h2>Editar Libro: {{ libro.titulo }}</h2>
+<form method="POST" enctype="multipart/form-data">
+  <div>
+    <label>Título:</label><br>
+    <input type="text" name="titulo" value="{{ libro.titulo }}" required><br>
+  </div><br>
+  <div>
+    <label>Autor:</label><br>
+    <input type="text" name="autor" value="{{ libro.autor }}" required><br>
+  </div><br>
+  <div>
+    <label>Año:</label><br>
+    <input type="number" name="anio" value="{{ libro.anio }}" required><br>
+  </div><br>
+  <div>
+    <label>Editorial:</label><br>
+    <input type="text" name="editorial" value="{{ libro.editorial }}" required><br>
+  </div><br>
+
+  {# NUEVO: Descripción #}
+  <div>
+    <label>Descripción:</label><br>
+    <textarea name="descripcion" rows="4" cols="50">{{ libro.descripcion or '' }}</textarea><br>
+  </div>
+
+  {# NUEVO: Géneros (selección múltiple) #}
+  <div>
+    <label>Género(s):</label><br>
+    <select name="generos" multiple size="5">
+      {% set libro_genero_ids = libro.generos | map(attribute='id') | list %}
+      {% for genero in generos_disponibles %} {# Pasaremos esto desde la ruta #}
+      <option value="{{ genero.id }}" {% if genero.id in libro_genero_ids %}selected{% endif %}>
+        {{ genero.nombre }}
+      </option>
+      {% endfor %}
+    </select><br>
+    <small>Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples géneros.</small><br>
+    <small>Si un género no existe, créalo primero <a href="{{ url_for('admin_gestionar_generos') }}" target="_blank">(Gestionar Géneros)</a>.</small><br><br>
+  </div>
+
+  <div>
+    <label>Máximo Préstamos:</label><br>
+    <input type="number" name="max_prestamos" value="{{ libro.max_prestamos }}" min="1"><br>
+  </div>
+  <div><br>
+    <label>Archivo del libro (PDF opcional, actual: {{ libro.archivo or 'Ninguno' }}):</label><br>
+    <input type="file" name="archivo" accept=".pdf,.epub"><br>
+    <small>Dejar vacío para no cambiar el archivo actual.</small><br><br>
+
+    {# CAMPO PARA ACTUALIZAR/AÑADIR PORTADA MANUAL #}
+    <div>
+      <label>Portada Manual (JPG, PNG, WEBP - actual:
+        {% if libro.portada_archivo %}
+        <a href="{{ url_for('static', filename='covers/' + libro.portada_archivo) }}" target="_blank">{{ libro.portada_archivo }}</a>
+        {% else %}
+        Ninguna
+        {% endif %}
+        ):</label><br>
+      <input type="file" name="portada_manual" accept=".jpg,.jpeg,.png,.webp"><br>
+      <small>Sube una nueva portada para reemplazar la actual o añadir una. Dejar vacío para no cambiar.</small><br><br>
+    </div>
+
+  </div>
+  <input type="submit" value="Actualizar Libro" class="btn btn-primary">
+  <a href="{{ url_for('lista_libros') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

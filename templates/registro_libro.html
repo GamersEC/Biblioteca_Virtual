@@ -1,25 +1,59 @@
 {% extends 'base.html' %}
-
 {% block title %}Registrar Libro{% endblock %}
-
 {% block content %}
 <h2>Registrar un nuevo libro</h2>
-<form action="/registrar_libro" method="POST" enctype="multipart/form-data">
-  <label>Título:</label><br>
-  <input type="text" name="titulo" required><br>
+<form action="{{ url_for('registro_libro_admin') }}" method="POST" enctype="multipart/form-data">
+  {# ... campos existentes ... #}
+  <div>
+    <label>Título:</label><br>
+    <input type="text" name="titulo" required><br>
+  </div>
+  <div>
+    <label>Autor:</label><br>
+    <input type="text" name="autor" required><br>
+  </div>
+  <div>
+    <label>Año:</label><br>
+    <input type="number" name="anio" required><br>
+  </div>
+  <div>
+    <label>Editorial:</label><br>
+    <input type="text" name="editorial" required><br>
+  </div>
 
-  <label>Autor:</label><br>
-  <input type="text" name="autor" required><br>
+  {# NUEVO: Descripción #}
+  <div>
+    <label>Descripción:</label><br>
+    <textarea name="descripcion" rows="4" cols="50"></textarea><br>
+  </div>
 
-  <label>Año:</label><br>
-  <input type="number" name="anio" required><br>
+  {# NUEVO: Géneros (selección múltiple) #}
+  <div>
+    <label>Género(s):</label><br>
+    <select name="generos" multiple size="5">
+      {% for genero in generos_disponibles %} {# Pasaremos esto desde la ruta #}
+      <option value="{{ genero.id }}">{{ genero.nombre }}</option>
+      {% endfor %}
+    </select><br>
+    <small>Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples géneros.</small><br>
+    <small>Si un género no existe, créalo primero <a href="{{ url_for('admin_gestionar_generos') }}" target="_blank">(Gestionar Géneros)</a>.</small><br><br> {# Enlace a futura página de gestión de géneros #}
+  </div>
 
-  <label>Editorial:</label><br>
-  <input type="text" name="editorial" required><br>
+  <div>
+    <label>Máximo Préstamos (por defecto: {{ config_max_prestamos_default }}):</label><br>
+    <input type="number" name="max_prestamos" value="{{ config_max_prestamos_default }}" min="1"><br>
+  </div>
+  <div>
+    <label>Archivo del libro (PDF, EPUB):</label><br>
+    <input type="file" name="archivo" accept=".pdf,.epub"><br>
+  </div>
+  <div>
+    <label>Portada Manual (JPG, PNG, WEBP - opcional):</label><br>
+    <input type="file" name="portada_manual" accept=".jpg,.jpeg,.png,.webp"><br>
+    <small>Sube una portada si el EPUB no la tiene o para archivos PDF.</small><br><br>
+  </div>
 
-  <label>Archivo del libro (PDF):</label><br>
-  <input type="file" name="archivo" accept=".pdf" required><br><br>
-
-  <input type="submit" value="Registrar Libro">
+  <input type="submit" value="Registrar Libro" class="btn btn-primary">
+  <a href="{{ url_for('lista_libros') }}" class="btn btn-secondary">Cancelar</a>
 </form>
 {% endblock %}

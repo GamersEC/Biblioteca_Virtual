@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar Géneros{% endblock %}
+
+{% block content %}
+<h2>Gestionar Géneros</h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <h3>Añadir Nuevo Género</h3>
+    <form method="POST" action="{{ url_for('admin_gestionar_generos') }}">
+      <div class="form-group">
+        <label for="nombre_genero">Nombre del Género:</label>
+        <input type="text" class="form-control" id="nombre_genero" name="nombre_genero" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Añadir Género</button>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <h3>Géneros Existentes</h3>
+    {% if generos %}
+    <ul class="list-group">
+      {% for genero in generos %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ genero.nombre }}
+        <form method="POST" action="{{ url_for('admin_eliminar_genero', genero_id=genero.id) }}" onsubmit="return confirm('¿Estás seguro de eliminar el género \'{{ genero.nombre }}\'? Esta acción no se puede deshacer.');" style="display: inline;">
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No hay géneros registrados.</p>
+    {% endif %}
+  </div>
+</div>
+<hr>
+<p><a href="{{ url_for('registro_libro_admin') }}">Volver a Registrar Libro</a></p>
+{% endblock %}

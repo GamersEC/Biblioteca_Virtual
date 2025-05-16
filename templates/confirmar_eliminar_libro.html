@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Eliminación - {{ libro.titulo }}{% endblock %}
+
+{% block content %}
+<h2>Confirmar Eliminación del Libro: "{{ libro.titulo }}"</h2>
+
+<div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">¡Advertencia Importante!</h4>
+    <p>Estás a punto de eliminar permanentemente el libro <strong>"{{ libro.titulo }}"</strong>.</p>
+    <p>Esta acción también eliminará <strong>TODOS los préstamos asociados</strong> a este libro (tanto activos como pasados) debido a la configuración de eliminación en cascada.</p>
+    <hr>
+    {% if prestamos_activos %}
+    <p class="mb-0"><strong>Actualmente, este libro tiene los siguientes préstamos activos que también serán eliminados:</strong></p>
+    <ul>
+        {% for prestamo in prestamos_activos %}
+        <li>Préstamo a: <strong>{{ prestamo.usuario.nombre }}</strong> (Fecha préstamo: {{ prestamo.fecha_prestamo|formatear_fecha }})</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mb-0">Actualmente, este libro no tiene préstamos activos. Sin embargo, cualquier préstamo pasado asociado también será eliminado.</p>
+    {% endif %}
+    <hr>
+    <p><strong>Esta acción no se puede deshacer.</strong></p>
+</div>
+
+<form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}">
+    <button type="submit" class="btn btn-danger">Sí, Eliminar el Libro y sus Préstamos</button>
+    <a href="{{ url_for('lista_libros') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+
+<style>
+    /* Estilos básicos para la alerta si no usas Bootstrap */
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .alert-heading {
+        color: inherit;
+    }
+</style>
+{% endblock %}

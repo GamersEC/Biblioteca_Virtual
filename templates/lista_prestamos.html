@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Gestión de Préstamos (Admin)</h2>
+
+<a href="{{ url_for('prestar_libro') }}" class="btn btn-success mb-3"><i class="fas fa-plus"></i> Registrar Nuevo Préstamo</a>
+
+<h3>Préstamos Activos ({{ prestamos_activos|length }})</h3>
+{% if prestamos_activos %}
+<table class="table table-striped">
+  <thead>
+  <tr>
+    <th>Libro</th>
+    <th>Usuario</th>
+    <th>Fecha Préstamo</th>
+    <th>Devolución Prevista</th>
+    <th>Tiempo Restante</th>
+    <th>Acciones</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for prestamo in prestamos_activos %}
+  <tr>
+    <td>{{ prestamo.libro.titulo }}</td>
+    <td>{{ prestamo.usuario.nombre }}</td>
+    <td>{{ prestamo.fecha_prestamo|formatear_fecha }}</td>
+    <td>{{ prestamo.fecha_devolucion_prevista|formatear_fecha }}</td>
+    <td>
+      {% if prestamo.tiempo_restante == "Vencido" %}
+      <span class="text-danger font-weight-bold">{{ prestamo.tiempo_restante }}</span>
+      {% else %}
+      {{ prestamo.tiempo_restante }}
+      {% endif %}
+    </td>
+    <td>
+      <a href="{{ url_for('devolver_libro', prestamo_id=prestamo.id) }}" class="btn btn-sm btn-warning">
+        <i class="fas fa-undo"></i> Marcar como Devuelto
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No hay préstamos activos en este momento.</p>
+{% endif %}
+
+<hr>
+
+<h3>Historial de Préstamos Devueltos (Últimos {{ prestamos_devueltos|length }})</h3>
+{% if prestamos_devueltos %}
+<table class="table table-sm">
+  <thead>
+  <tr>
+    <th>Libro</th>
+    <th>Usuario</th>
+    <th>Fecha Préstamo</th>
+    <th>Fecha Devolución Real</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for prestamo in prestamos_devueltos %}
+  <tr>
+    <td>{{ prestamo.libro.titulo }}</td>
+    <td>{{ prestamo.usuario.nombre }}</td>
+    <td>{{ prestamo.fecha_prestamo|formatear_fecha }}</td>
+    <td>{{ prestamo.fecha_devolucion_real|formatear_fecha }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No hay historial de préstamos devueltos.</p>
+{% endif %}
+
+{% endblock %}

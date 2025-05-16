@@ -1,29 +1,224 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Lista de Libros Registrados</h2>
+<style>
+    .book-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start;
+        padding: 20px 0;
+    }
+    .book-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 220px;
+        padding: 15px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+    }
+    .book-cover-container {
+        width: 100%;
+        height: 220px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+    .book-cover-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .book-card .book-title {
+        font-size: 1.05em;
+        font-weight: bold;
+        margin-bottom: 5px;
+        height: 42px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .book-card .book-author {
+        font-size: 0.85em;
+        color: #555;
+        margin-bottom: 8px;
+        height: 32px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .book-genres {
+        margin-bottom: 8px;
+        min-height: 22px;
+        line-height: 1.4;
+    }
+    .book-genres .badge {
+        display: inline-block;
+        margin-right: 4px;
+        margin-bottom: 4px;
+        padding: 0.3em 0.6em;
+        font-size: 0.75em;
+        font-weight: bold;
+        color: #fff;
+        background-color: #007bff;
+        border-radius: 0.25rem;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+    }
+    .book-description-preview {
+        font-size: 0.8em;
+        color: #666;
+        margin-bottom: 10px;
+        height: 48px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .book-description-preview small em {
+        font-style: italic;
+    }
+    .book-availability {
+        font-size: 0.8em;
+        margin-bottom: 10px;
+        min-height: 18px;
+    }
+    .book-actions {
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+    .book-actions .btn, .book-actions form button {
+        width: 100%;
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+</style>
 
-<!-- Mensajes Flash -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-<div class="alert alert-{{ category }}">{{ message }}</div>
-{% endfor %}
+<h2>Catálogo de Libros</h2>
+
+{% if is_admin %}
+<a href="{{ url_for('registro_libro_admin') }}" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Registrar Nuevo Libro</a>
+<a href="{{ url_for('admin_gestionar_generos') }}" class="btn btn-secondary mb-3"><i class="fas fa-tags"></i> Gestionar Géneros</a>
 {% endif %}
-{% endwith %}
 
-{% if libros %}
-<ul>
-    {% for libro in libros %}
-    <li>
-        <strong>{{ libro.titulo }}</strong> — {{ libro.autor }} ({{ libro.anio }}) [Editorial: {{ libro.editorial }}]
-        {% if libro.archivo %}
-        — <a href="{{ url_for('static', filename='uploads/' + libro.archivo) }}" target="_blank">Ver PDF</a>
+{% if libros_con_estado %}
+<div class="book-grid">
+    {% for item in libros_con_estado %}
+    {% set libro = item.libro %}
+    {% set prestamo_id_usuario = item.prestamo_activo_usuario_id %}
+    <div class="book-card">
+        <div class="book-cover-container">
+            {% if libro.portada_archivo %}
+            <img src="{{ url_for('static', filename= 'covers/' + libro.portada_archivo) }}" alt="Portada de {{ libro.titulo }}">
+            {% else %}
+            <i class="fas fa-book fa-3x text-muted"></i>
+            {% endif %}
+        </div>
+        <h5 class="book-title" title="{{ libro.titulo }}">{{ libro.titulo }}</h5>
+        <p class="book-author" title="{{ libro.autor }}">{{ libro.autor }}</p>
+
+        {% if libro.generos %}
+        <div class="book-genres">
+            {% for genero in libro.generos %}
+            <span class="badge">{{ genero.nombre }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="book-genres"></div>
         {% endif %}
-    </li>
+
+        {% if libro.descripcion %}
+        <p class="book-description-preview" title="{{ libro.descripcion }}">
+            <small>{{ libro.descripcion | truncate(70, True, '...') }}</small>
+        </p>
+        {% else %}
+        <p class="book-description-preview"><small><em>Sin descripción.</em></small></p>
+        {% endif %}
+
+        <div class="book-availability">
+            {% if is_admin %}
+            <small class="text-{{ 'success' if (libro.max_prestamos - libro.prestamos_activos) > 0 else 'danger' }}">
+                Disponible ({{ libro.max_prestamos - libro.prestamos_activos }}/{{ libro.max_prestamos }})
+            </small>
+            {% else %}
+            {% if libro.prestamos_activos < libro.max_prestamos %}
+            <small class="text-success">Disponible</small>
+            {% else %}
+            {% if prestamo_id_usuario %}
+            <small class="text-success">Disponible (Lo tienes)</small>
+            {% else %}
+            <small class="text-danger">Agotado</small>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="book-actions">
+            {% if is_admin %}
+            <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i> Editar</a>
+            <a href="{{ url_for('eliminar_libro', libro_id=libro.id) }}" class="btn btn-sm btn-danger mt-1">
+                <i class="fas fa-trash"></i> Eliminar
+            </a>
+            {% if libro.archivo %}
+            <a href="{{ url_for('static', filename='uploads/' + libro.archivo) }}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1" title="Descargar archivo original (Admin)">
+                <i class="fas fa-download"></i> Archivo
+            </a>
+            {# --- NUEVO BOTÓN/ENLACE PARA VER PDF (SOLO SI ES PDF) --- #}
+            {% if libro.archivo.lower().endswith('.pdf') %}
+            <a href="{{ url_for('static', filename='uploads/' + libro.archivo) }}" target="_blank" class="btn btn-sm btn-outline-info mt-1" title="Ver PDF directamente (Admin)">
+                <i class="fas fa-eye"></i> Ver PDF
+            </a>
+            {% endif %}
+            {# --- FIN DEL NUEVO BOTÓN --- #}
+            {% endif %}
+            {% else %} {# Acciones para USUARIO NORMAL #}
+            {% set extension = libro.archivo.rsplit('.', 1)[1].lower() if libro.archivo else '' %}
+            {% if prestamo_id_usuario %}
+            {# Si el usuario tiene un préstamo activo de este libro #}
+            {% if libro.archivo %}
+            <a href="{{ url_for('leer_libro_pdf', prestamo_id=prestamo_id_usuario) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-book-open"></i> Leer Libro
+            </a>
+            {% else %}
+            <span class="text-muted">Archivo no disponible</span>
+            {% endif %}
+            <a href="{{ url_for('mis_prestamos') }}" class="btn btn-sm btn-outline-secondary mt-1">
+                <i class="fas fa-user-clock"></i> Mis Préstamos
+            </a>
+            {% elif libro.prestamos_activos < libro.max_prestamos and libro.archivo %}
+            {# Si el libro está disponible y el usuario NO lo tiene #}
+            <form action="{{ url_for('solicitar_prestamo_usuario', libro_id=libro.id) }}" method="POST" style="display:block;">
+                <button type="submit" class="btn btn-sm btn-success">
+                    <i class="fas fa-hand-holding"></i> Solicitar Préstamo
+                </button>
+            </form>
+            {% elif not libro.archivo %}
+            <button class="btn btn-sm btn-secondary disabled">No Disponible</button>
+            {% else %}
+            {# Libro agotado y el usuario no lo tiene #}
+            <button class="btn btn-sm btn-secondary disabled">Agotado</button>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
     {% endfor %}
-</ul>
+</div>
 {% else %}
-<p>No hay libros registrados.</p>
+<p>No hay libros en el catálogo.</p>
 {% endif %}
+
 {% endblock %}

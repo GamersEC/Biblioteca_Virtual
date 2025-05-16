@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Registrar Préstamo (Admin)</h2>
+<form method="POST">
+    <div class="form-group">
+        <label>Libro:</label>
+        <select name="libro_id" class="form-control" required>
+            {% for libro in libros %}
+            <option value="{{ libro.id }}">
+                {{ libro.titulo }} (Disponibles: {{ libro.max_prestamos - libro.prestamos_activos }}/{{ libro.max_prestamos }})
+            </option>
+            {% else %}
+            <option disabled>No hay libros disponibles para préstamo.</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Usuario:</label>
+        <select name="usuario_id" class="form-control" required>
+            {% for usuario in usuarios %}
+            <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
+            {% else %}
+            <option disabled>No hay usuarios registrados.</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Días de préstamo (1-{{ config.get('max_duracion_prestamo', 30) }}, por defecto: {{ duracion_default }}):</label>
+        <input type="number"
+               name="duracion"
+               class="form-control"
+               min="1"
+               max="{{ config.get('max_duracion_prestamo', 30) }}"
+               value="{{ duracion_default }}"
+               required
+               placeholder="Selecciona entre 1 y {{ config.get('max_duracion_prestamo', 30) }} días">
+    </div>
+
+    <button type="submit" class="btn btn-primary" {% if not libros or not usuarios %}disabled{% endif %}>Registrar Préstamo</button>
+    <a href="{{ url_for('lista_prestamos') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

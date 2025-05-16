@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Lector PDF - {{ libro_titulo }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  html, body {
+    height: 100%; margin: 0; padding: 0; overflow: hidden;
+  }
+  #lector-pdf-page-container {
+    display: flex; flex-direction: column; height: 100vh; width: 100vw; box-sizing: border-box;
+  }
+  .lector-header {
+    padding: 8px 15px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0; box-sizing: border-box; position: relative; z-index: 10;
+  }
+  .lector-header h2 { margin: 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lector-header .actions { display: flex; align-items: center; } /* Contenedor para botones de acción en el header */
+  .lector-header .actions .btn-sm { margin-left: 10px; } /* Espacio entre botones */
+
+  #pdf-viewer-iframe-container {
+    flex-grow: 1; width: 100%; border: none; overflow: hidden;
+    box-sizing: border-box; position: relative;
+  }
+  #pdfViewerIframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+  }
+
+  /* Estilos para cuando el visor está en pantalla completa (opcional, pero puede ser útil) */
+  #pdf-viewer-iframe-container:-webkit-full-screen { /* Chrome, Safari, Opera */
+    background-color: #333; /* Un fondo oscuro para el modo pantalla completa */
+  }
+  #pdf-viewer-iframe-container:-moz-full-screen { /* Firefox */
+    background-color: #333;
+  }
+  #pdf-viewer-iframe-container:-ms-fullscreen { /* IE/Edge */
+    background-color: #333;
+  }
+  #pdf-viewer-iframe-container:fullscreen { /* Estándar */
+    background-color: #333;
+  }
+
+</style>
+{% endblock %}
+
+{% set hide_page_footer = True %}
+
+{% block content %}
+<div id="lector-pdf-page-container">
+  <div class="lector-header">
+    <h2>Leyendo: {{ libro_titulo }}</h2>
+    <div class="actions"> {# Agrupar botones de acción #}
+      <button id="toggleFullscreenBtn" class="btn btn-outline-secondary btn-sm" title="Pantalla Completa">
+        <i class="fas fa-expand"></i>
+      </button>
+      <a href="{{ url_for('mis_prestamos') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <div id="pdf-viewer-iframe-container"> {# Este es el elemento que pondremos en pantalla completa #}
+    <iframe id="pdfViewerIframe"
+            src="{{ url_for('static', filename='pdfjs/web/viewer.html') }}?file={{ url_pdf | urlencode }}#page=1&view=FitH&toolbar=0&navpanes=0&sidebar=0&statusbar=0&messages=0"
+            title="Lector de PDF para {{ libro_titulo }}"
+            allowfullscreen webkitallowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementById('pdfViewerIframe');
+    const viewerIframeContainer = document.getElementById('pdf-viewer-iframe-container'); // El elemento a poner en pantalla completa
+    const fullscreenButton = document.getElementById('toggleFullscreenBtn');
+    const fullscreenIconExpand = '<i class="fas fa-expand"></i>';
+    const fullscreenIconCompress = '<i class="fas fa-compress"></i>';
+
+    // Deshabilitar menú contextual en el iframe (con limitaciones)
+    iframe.addEventListener('load', function() {
+      try {
+        if (iframe.contentWindow && iframe.contentWindow.document && iframe.contentWindow.document.body) {
+          iframe.contentWindow.document.body.oncontextmenu = function() { return false; };
+        }
+      } catch (e) {
+        console.warn("No se pudo acceder al contenido del iframe del visor PDF para deshabilitar menú contextual.", e);
+      }
+    });
+
+    // Funcionalidad de Pantalla Completa
+    if (fullscreenButton && viewerIframeContainer) {
+      fullscreenButton.addEventListener('click', function() {
+        if (!document.fullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) { // No está en pantalla completa
+
+          if (viewerIframeContainer.requestFullscreen) {
+            viewerIframeContainer.requestFullscreen();
+          } else if (viewerIframeContainer.mozRequestFullScreen) { /* Firefox */
+            viewerIframeContainer.mozRequestFullScreen();
+          } else if (viewerIframeContainer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+            viewerIframeContainer.webkitRequestFullscreen();
+          } else if (viewerIframeContainer.msRequestFullscreen) { /* IE/Edge */
+            viewerIframeContainer.msRequestFullscreen();
+          }
+        } else { // Ya está en pantalla completa, salir
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.mozCancelFullScreen) { /* Firefox */
+            document.mozCancelFullScreen();
+          } else if (document.webkitExitFullscreen) { /* Chrome, Safari & Opera */
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) { /* IE/Edge */
+            document.msExitFullscreen();
+          }
+        }
+      });
+
+      // Actualizar el icono del botón cuando cambia el estado de pantalla completa
+      function updateFullscreenButton() {
+        if (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+          fullscreenButton.innerHTML = fullscreenIconCompress;
+          fullscreenButton.title = "Salir de Pantalla Completa";
+        } else {
+          fullscreenButton.innerHTML = fullscreenIconExpand;
+          fullscreenButton.title = "Pantalla Completa";
+        }
+      }
+
+      document.addEventListener('fullscreenchange', updateFullscreenButton);
+      document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+      document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+      document.addEventListener('msfullscreenchange', updateFullscreenButton);
+    } else {
+      console.warn("Botón de pantalla completa o contenedor del visor no encontrado.");
+    }
+  });
+</script>
+{% endblock %}

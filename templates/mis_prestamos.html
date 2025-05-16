@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Préstamos{% endblock %}
+
+{% block content %}
+<h2>Mis Préstamos</h2>
+
+<h3>Préstamos Activos ({{ prestamos_activos|length }})</h3>
+{% if prestamos_activos %}
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Libro</th>
+        <th>Fecha Préstamo</th>
+        <th>Devolución Prevista</th>
+        <th>Tiempo Restante</th>
+        <th>Acción de Lectura</th>
+        <th>Acción de Devolución</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for prestamo in prestamos_activos %}
+    <tr>
+        <td>{{ prestamo.libro.titulo }}</td>
+        <td>{{ prestamo.fecha_prestamo|formatear_fecha }}</td>
+        <td>{{ prestamo.fecha_devolucion_prevista|formatear_fecha }}</td>
+        <td>
+            {% if prestamo.tiempo_restante == "Vencido" %}
+            <span class="text-danger font-weight-bold">{{ prestamo.tiempo_restante }}</span>
+            {% else %}
+            {{ prestamo.tiempo_restante }}
+            {% endif %}
+        </td>
+        <td>
+            {% if prestamo.libro.archivo and prestamo.esta_activo and now <= prestamo.fecha_devolucion_prevista %}
+            {% set extension = prestamo.libro.archivo.rsplit('.', 1)[1].lower() %}
+            {% if extension == 'pdf' %}
+            {# Enlace al nuevo visor PDF #}
+            <a href="{{ url_for('leer_libro_pdf', prestamo_id=prestamo.id) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-file-pdf"></i> Leer PDF
+            </a>
+            {% elif extension == 'epub' %}
+            {# Si subiste un EPUB, se ofrecerá para descargar como antes si mantienes esa lógica en una ruta separada #}
+            {# O puedes poner un mensaje "Solo PDFs son visibles en el lector" #}
+            {# Por ahora, asumimos que solo se mostrarán PDFs en el lector #}
+            <a href="{{ url_for('leer_libro_o_descargar', prestamo_id=prestamo.id) }}" class="btn btn-sm btn-secondary" target="_blank">
+                <i class="fas fa-download"></i> Descargar EPUB
+            </a>
+            {% else %}
+            <span class="text-muted">Formato no soportado para visor</span>
+            {% endif %}
+            {% elif prestamo.libro.archivo %}
+            <span class="text-muted"><i class="fas fa-ban"></i> Acceso no disponible</span>
+            {% else %}
+            N/A
+            {% endif %}
+        </td>
+        <td>
+            <form action="{{ url_for('devolver_libro_usuario', prestamo_id=prestamo.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres devolver este libro?');">
+                <button type="submit" class="btn btn-sm btn-warning">
+                    <i class="fas fa-undo-alt"></i> Devolver Libro
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No tienes préstamos activos en este momento.</p>
+{% endif %}
+
+<hr>
+
+<h3>Historial de Préstamos (Últimos {{ prestamos_historial|length }})</h3>
+{% if prestamos_historial %}
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th>Libro</th>
+        <th>Fecha Préstamo</th>
+        <th>Fecha Devolución</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for prestamo in prestamos_historial %}
+    <tr>
+        <td>{{ prestamo.libro.titulo }}</td>
+        <td>{{ prestamo.fecha_prestamo|formatear_fecha }}</td>
+        <td>{{ prestamo.fecha_devolucion_real|formatear_fecha }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No tienes historial de préstamos.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,32 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <style>
-        .alert-success { color: green; }
-        .alert-error { color: red; }
-    </style>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Biblioteca Virtual{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> #} {# Si tienes un style.css global #}
+    <style>
+        /* Estilos generales del cuerpo para el layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif; /* Un tipo de fuente base */
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #f8f9fa; /* Un color de fondo ligero para el header */
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            flex-shrink: 0;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        nav {
+            margin-top: 10px;
+        }
+        nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .user-info {
+            float: right;
+            margin-top: 5px; /* Ajustar para alineación con el h1 */
+            font-size: 0.9em;
+        }
+        main {
+            flex-grow: 1;
+            overflow-y: auto; /* Scroll en main si el contenido es más largo */
+            padding: 20px; /* Padding general para el contenido */
+        }
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            flex-shrink: 0;
+            font-size: 0.9em;
+        }
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+        .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+        .alert-error { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+        .alert-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+        .alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+    </style>
+    {% block head_extra %}{% endblock %}
 </head>
 <body>
 <header>
     <h1>Biblioteca Virtual</h1>
+    {% if current_user %}
+    <div class="user-info">
+        Hola, {{ current_user.nombre }}
+    </div>
+    {% endif %}
+
+    {# --- ESTA ES LA SECCIÓN CRUCIAL DE NAVEGACIÓN --- #}
     <nav>
-        <a href="/">Inicio</a> |
-        <a href="/registro_libro">Registrar Libro</a> |
-        <a href="/lista_libros">Ver Libros</a>
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a>
+        {% if current_user %}
+        <a href="{{ url_for('lista_libros') }}"><i class="fas fa-book"></i> Catálogo Libros</a>
+        {% if is_admin %}
+        <a href="{{ url_for('registro_libro_admin') }}"><i class="fas fa-plus-circle"></i> Registrar Libro</a>
+        <a href="{{ url_for('admin_gestionar_generos') }}"><i class="fas fa-tags"></i> Gestionar Géneros</a>
+        <a href="{{ url_for('lista_usuarios') }}"><i class="fas fa-users"></i> Gestionar Usuarios</a>
+        <a href="{{ url_for('prestar_libro') }}"><i class="fas fa-hand-holding-usd"></i> Registrar Préstamo</a>
+        <a href="{{ url_for('lista_prestamos') }}"><i class="fas fa-list-alt"></i> Ver Todos Préstamos</a>
+        <a href="{{ url_for('admin_configuracion') }}"><i class="fas fa-cog"></i> Configuración</a>
+        {% else %}
+        <a href="{{ url_for('mis_prestamos') }}"><i class="fas fa-user-clock"></i> Mis Préstamos</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Salir</a>
+        {% else %}
+        <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+        {% endif %}
     </nav>
-    <hr>
+    {# --- FIN DE LA SECCIÓN DE NAVEGACIÓN --- #}
+    <hr style="clear: both;"> {# Añadido clear:both para el hr después del float #}
 </header>
 
 <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
     {% block content %}{% endblock %}
 </main>
 
+{% if not hide_page_footer %} {# Condición para ocultar footer en páginas específicas #}
 <footer>
     <hr>
-    <p>&copy; 2025 Biblioteca Virtual Universitaria</p>
+    <p>© {% if now %}{{ now.year }}{% else %}2025{% endif %} Biblioteca Virtual Universitaria</p>
 </footer>
+{% endif %}
+
+{# Scripts JS globales o específicos de página (PDF.js se carga en lector_pdf.html) #}
+{% block scripts_extra %}{% endblock %}
 </body>
 </html>

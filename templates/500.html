@@ -1,56 +1,8 @@
-{% extends 'base.html' %}
-
-{% block title %}Error del servidor{% endblock %}
-
+{# templates/500.html #}
+{% extends "base.html" %}
+{% block title %}Error del Servidor{% endblock %}
 {% block content %}
-<div class="error-container">
-    <h2>Error 500 - Problemas en el servidor</h2>
-    <p>¡Ups! Algo salió mal en nuestro lado. Estamos trabajando para solucionarlo.</p>
-    <img src="{{ url_for('static', filename='images/500.png') }}" alt="Error 500" class="error-image">
-    <div class="acciones">
-        <a href="/" class="btn-volver">Volver al inicio</a>
-        <a href="javascript:location.reload()" class="btn-reintentar">Reintentar</a>
-    </div>
-</div>
-
-<style>
-    .error-container {
-        text-align: center;
-        padding: 2rem;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .error-image {
-        width: 300px;
-        margin: 1.5rem 0;
-    }
-
-    .acciones {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 1rem;
-    }
-
-    .btn-volver, .btn-reintentar {
-        padding: 0.8rem 1.5rem;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        transition: opacity 0.3s;
-    }
-
-    .btn-volver {
-        background-color: #2c3e50;
-    }
-
-    .btn-reintentar {
-        background-color: #27ae60;
-    }
-
-    .btn-volver:hover, .btn-reintentar:hover {
-        opacity: 0.9;
-    }
-</style>
+<h1>Error 500</h1>
+<p>Ha ocurrido un error interno en el servidor. Ya hemos sido notificados.</p>
+<p><a href="{{ url_for('index') }}">Volver al inicio</a></p>
 {% endblock %}
