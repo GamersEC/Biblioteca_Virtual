@@ -2,6 +2,7 @@
 
 {% block content %}
 <style>
+    /* Estilos para la lista de libros */
     .book-grid {
         display: flex;
         flex-wrap: wrap;
@@ -106,7 +107,58 @@
         margin-top: 5px;
         font-size: 0.9em;
     }
+
+ <style>
+/* Estilo del formulario de búsqueda */
+    .formulario-busqueda {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .formulario-busqueda input[type="text"] {
+        padding: 8px;
+        width: 200px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .formulario-busqueda button,
+    .formulario-busqueda a {
+        padding: 8px 16px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .formulario-busqueda a {
+        background-color: #6c757d;
+    }
+
+    .formulario-busqueda button:hover,
+    .formulario-busqueda a:hover {
+        opacity: 0.9;
+    }
+
+
 </style>
+<!-- FORMULARIO DE BÚSQUEDA -->
+<form method="get" class="mb-3">
+  <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+    <input type="text" name="nombre" placeholder="Buscar por nombre" value="{{ request.args.get('nombre', '') }}" class="form-control">
+    <input type="text" name="autor" placeholder="Buscar por autor" value="{{ request.args.get('autor', '') }}" class="form-control">
+    <input type="text" name="categoria" placeholder="Buscar por género" value="{{ request.args.get('categoria', '') }}" class="form-control">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+    <a href="{{ url_for('lista_libros') }}" class="btn btn-secondary">Limpiar</a>
+  </div>
+</form>
+
 
 <h2>Catálogo de Libros</h2>
 

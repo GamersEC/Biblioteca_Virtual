@@ -19,10 +19,13 @@ class Genero(db.Model):
 
 class Libro(db.Model):
     __tablename__ = 'libros'
-
+    __table_args__ = (
+        db.Index('ix_titulo', 'titulo'),
+        db.Index('ix_autor', 'autor'),
+        )
     id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False)
-    autor = db.Column(db.String(50), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    autor = db.Column(db.String(200), nullable=False)
     anio = db.Column(db.Integer, nullable=False)
     editorial = db.Column(db.String(50), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)

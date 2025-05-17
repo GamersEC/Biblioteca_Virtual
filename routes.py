@@ -292,14 +292,33 @@ def configurar_rutas(app, login_required, admin_required):
     @app.route('/lista_libros')
     @login_required
     def lista_libros():
-        libros_query = Libro.query.order_by(Libro.titulo)
+        nombre = request.args.get('nombre', '').strip()
+        autor = request.args.get('autor', '').strip()
+        categoria = request.args.get('categoria', '').strip()
+
+        query = Libro.query
+
+        if nombre:
+            query = query.filter(Libro.titulo.ilike(f"%{nombre}%"))
+        if autor:
+            query = query.filter(Libro.autor.ilike(f"%{autor}%"))
+        if categoria:
+            query = query.join(Libro.generos).filter(Genero.nombre.ilike(f"%{categoria}%"))
+
+        query = query.order_by(Libro.titulo)
+
         prestamos_usuario_activo = {}
         if g.user and g.user.role != 'admin':
             prestamos = Prestamo.query.filter_by(usuario_id=g.user.id, fecha_devolucion_real=None).all()
-            for p in prestamos: prestamos_usuario_activo[p.libro_id] = p.id
-        libros_con_estado = [{'libro': l, 'prestamo_activo_usuario_id': prestamos_usuario_activo.get(l.id)} for l in libros_query.all()]
-        return render_template('lista_libros.html', libros_con_estado=libros_con_estado)
+            for p in prestamos:
+                prestamos_usuario_activo[p.libro_id] = p.id
 
+        libros_con_estado = [
+            {'libro': l, 'prestamo_activo_usuario_id': prestamos_usuario_activo.get(l.id)}
+            for l in query.all()
+        ]
+
+        return render_template('lista_libros.html', libros_con_estado=libros_con_estado)
 
     # ========================
     # Sección Usuarios (Admin)
